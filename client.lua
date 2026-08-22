@@ -9,6 +9,18 @@ GameSettings = {
     maxAttempts = 10
 }
 
+-- Keep the NUI fully closed until StartMiniGame is called by the robbery.
+CreateThread(function()
+    SetNuiFocus(false, false)
+    Wait(500)
+    SendNUIMessage({ type = "hideUI" })
+end)
+
+AddEventHandler("onResourceStop", function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    SetNuiFocus(false, false)
+end)
+
 -- Helper: check if table contains value
 local function TableContains(tbl, val)
     for _, v in ipairs(tbl) do
@@ -126,6 +138,17 @@ RegisterNUICallback("attempt", function(data, cb)
         EndGame("win")
     elseif #attempts >= GameSettings.maxAttempts then
         EndGame("lose")
+    end
+
+    cb("ok")
+end)
+
+RegisterNUICallback("escape", function(_, cb)
+    if timerRunning then
+        EndGame("lose")
+    else
+        SendNUIMessage({ type = "showUI", state = false })
+        SetNuiFocus(false, false)
     end
 
     cb("ok")
